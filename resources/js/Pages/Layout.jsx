@@ -37,9 +37,6 @@ const Layout = ({ children }) => {
         },
     };
     useEffect(() => {
-        console.log('ur', url)
-    }, [url])
-    useEffect(() => {
         if (isPortrait) {
             setCollapsedWidth(0);
         } else {
