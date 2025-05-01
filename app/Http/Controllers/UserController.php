@@ -41,7 +41,7 @@ class UserController extends Controller
                 ->withInput();
         }
     }
-    public function signup(Request $request) {}
+    public function store(Request $request) {}
     public function logout(Request $request)
     {
         Auth::logout();

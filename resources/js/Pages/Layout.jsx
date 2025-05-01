@@ -157,7 +157,6 @@ const Layout = ({ children }) => {
                         )}
                     </div>
                 </header>
-                <hr className="mb-4 mt-1" />
                 <section className="maincontent px-10 relative">
                     {React.cloneElement(children)}
                 </section>
