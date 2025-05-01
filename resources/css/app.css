@@ -12,6 +12,9 @@
         "Noto Color Emoji";
 }
 
+button {
+    @apply cursor-pointer;
+}
 .ps-menu-button.ps-active {
     background-color: #e5ebf0 !important;
     color: #000 !important;

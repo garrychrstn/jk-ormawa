@@ -37,6 +37,8 @@ const Layout = ({ children }) => {
         },
     };
     useEffect(() => {
+    }, [auth])
+    useEffect(() => {
         if (isPortrait) {
             setCollapsedWidth(0);
         } else {
@@ -81,8 +83,8 @@ const Layout = ({ children }) => {
                 >
                     <button className="text-center m-auto flex items-center" onClick={() => router.visit
                         ('/')}>
-                        <div className="flex  py-8 justify-center gap-2 text-slate rounded-md items-center m-auto">
-                            <img src='images/logo.png' alt='morg Logo' className="w-10 h-10" />
+                        <div className="flex  py-8 justify-center gap-1 text-slate rounded-md items-center m-auto">
+                            <img src='images/indonusa.png' alt='morg Logo' className="w-14" />
                             <p
                                 className={`title ${sidebar ? "block" : "hidden"
                                     }`}
@@ -141,10 +143,13 @@ const Layout = ({ children }) => {
                         {auth?.user && (
                             <button
                                 onClick={() => logOut()}
-                                className="flex gap-3 border border-slate-400 px-3 py-1.5 rounded-md"
+                                className="flex gap-3 border items-center border-slate-400 px-3 py-1 rounded-md"
                             >
                                 <User2 />
-                                <p>{auth.user.role === 'admin' ? 'Admin' : auth.user.email}</p>
+                                <div className="justify-start text-left leading-tight">
+                                    <p className="mb-0">{auth.user.email}</p>
+                                    <small className="-mt-1">{auth.user.role}</small>
+                                </div>
                             </button>
                         )}
                         {auth?.user && (
