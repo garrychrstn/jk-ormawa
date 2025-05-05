@@ -4,11 +4,29 @@ namespace App\Http\Controllers;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Models\Invites;
+use App\Models\Events;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 class UserController extends Controller
 {
+    public function catalogue()
+    {
+        $events = Events::where("eventEnd", ">", now())
+            ->with("ormawa")
+            ->orderBy("eventEnd", "asc")
+            ->get();
+    }
+    public function dashboard()
+    {
+        $user = $user = Auth::user();
+        if ($user->role === "admin") {
+            return Inertia::render("DashboardAdmin");
+        } else {
+            return Inertia::render("Dashboard");
+        }
+    }
     public function signin(Request $request)
     {
         $data = $request->validate([
@@ -29,7 +47,7 @@ class UserController extends Controller
             ])
         ) {
             $request->session()->regenerate();
-            if ($user->role == "admin") {
+            if ($user->role !== "user") {
                 return redirect("/dashboard");
             } else {
                 return redirect("/");
@@ -62,23 +80,16 @@ class UserController extends Controller
                 if (!isset($data["token"])) {
                     $data["role"] = "user";
                 } else {
-                    $ormawa = Ormawa::where("token", $data["token"])
-                        ->with("members")
-                        ->first();
-                    if (!$ormawa) {
-                        DB::rollBack();
-                        return redirect()
-                            ->back()
-                            ->withErrors(["token" => "Invalid token"])
-                            ->withInput();
-                    }
-                    if ($ormawa->members->count() > 0) {
-                        $data["isPj"] = false;
-                    } else {
-                        $data["isPj"] = true;
-                    }
+                    $token = Invites::where("token", $data["token"])->first();
                     $data["role"] = "ormawa";
-                    $data["ormawaId"] = $ormawa->id;
+                    if ($token->role === "pj") {
+                        $data["isPj"] = true;
+                    } else {
+                        $data["isPj"] = false;
+                    }
+                    $data["ormawaId"] = $token->ormawaId;
+                    $token->status = "used";
+                    $token->save();
                 }
             }
             $data["password"] = bcrypt($data["password"]);

@@ -85,6 +85,7 @@ const Login = () => {
                             <div className="mb-5">
                                 <label htmlFor="email" className="block text-gray-700 mb-2 font-medium">Email</label>
                                 <input
+                                    autoFocus
                                     type="email"
                                     id="email"
                                     className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400 bg-[#f9f9f9]"

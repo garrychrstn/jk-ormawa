@@ -1,5 +1,6 @@
 import { Link, router, usePage } from "@inertiajs/react";
 import {
+    Calendar1,
     Check,
     CircleAlert,
     Clock3,
@@ -37,6 +38,7 @@ const Layout = ({ children }) => {
         },
     };
     useEffect(() => {
+        console.log(auth)
     }, [auth])
     useEffect(() => {
         if (isPortrait) {
@@ -51,31 +53,33 @@ const Layout = ({ children }) => {
     return (
         <section className="layout bg-white flex text-textLight relative">
             <ToastContainer
-                position="bottom-right"
-                autoClose={3000}
-                hideProgressBar={false}
+                position="top-right"
+                autoClose={1500}
+                hideProgressBar={true}
                 newestOnTop={false}
                 closeOnClick={false}
                 pauseOnFocusLoss
                 draggable
                 pauseOnHover
-                theme="light"
+                theme="dark"
             />
             <div
                 className={
-                    isPortrait ? `min-h-screen fixed z-50 flex` : "min-h-screen z-50 flex"
+                    isPortrait
+                        ? `h-screen fixed z-50 flex p-2`
+                        : "h-screen z-50 flex p-2"
                 }
             >
                 <Sidebar
                     className={
                         isPortrait
-                            ? `min-h-screen fixed z-50`
-                            : "min-h-screen z-50"
+                            ? `h-full fixed z-50`
+                            : "h-full z-50"
                     }
                     collapsed={!sidebar}
                     backgroundColor="#f9f9f9"
                     rootStyles={{
-                        borderRight: "1px solid #ededed",
+                        // borderRight: "1px solid #ededed",
                     }}
                     overlay={true}
                     collapsedWidth={`${collapsedWidth}px`}
@@ -111,13 +115,33 @@ const Layout = ({ children }) => {
                         }}
                     >
                         <MenuItem
-                            id="Dashboard"
+                            id="dashboard"
                             icon={<Home />}
                             active={url.startsWith('/dashboard')}
                             component={<Link href='/dashboard' />}
                         >
                             Dashboard
                         </MenuItem>
+                        {auth?.user?.role === "admin" && (
+                            <MenuItem
+                                id="ormawa"
+                                icon={<Home />}
+                                active={url.startsWith('/ormawa')}
+                                component={<Link href='/ormawa' />}
+                            >
+                                Ormawa
+                            </MenuItem>
+                        )}
+                        {auth?.user?.role === 'ormawa' && (
+                            <MenuItem
+                                id="event"
+                                icon={<Calendar1 />}
+                                active={url.startsWith('/event')}
+                                component={<Link href='/event' />}
+                            >
+                                Event
+                            </MenuItem>
+                        )}
                     </Menu>
                 </Sidebar>
                 {isPortrait && sidebar && (
@@ -139,11 +163,20 @@ const Layout = ({ children }) => {
                             </div>
                         </button>
                     </div>
-                    <div className="flex items-center gap-3">
+                    <div className="flex items-stretch gap-3">
+                        {auth?.user && auth.user.role === 'ormawa' && (
+                            <div
+                                className="flex gap-3 border items-center border-slate-400 px-3 py-1 rounded-md h-full"
+                            >
+                                <div className="justify-start text-left leading-tight">
+                                    <p className="mb-0">{auth.user.ormawa.name}</p>
+                                </div>
+                            </div>
+                        )}
                         {auth?.user && (
                             <button
                                 onClick={() => logOut()}
-                                className="flex gap-3 border items-center border-slate-400 px-3 py-1 rounded-md"
+                                className="flex gap-3 border items-center border-slate-400 px-3 py-1 rounded-md h-full"
                             >
                                 <User2 />
                                 <div className="justify-start text-left leading-tight">
@@ -155,7 +188,7 @@ const Layout = ({ children }) => {
                         {auth?.user && (
                             <button
                                 onClick={() => logOut()}
-                                className="border py-1.5 px-2 rounded-md border-slate-400 hover:text-white hover:bg-slate-600 mytransition"
+                                className="border py-1.5 px-2 rounded-md border-slate-400 hover:text-white hover:bg-slate-600 mytransition h-full"
                             >
                                 <LogOut />
                             </button>

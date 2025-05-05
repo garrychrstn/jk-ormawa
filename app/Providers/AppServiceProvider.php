@@ -28,6 +28,7 @@ class AppServiceProvider extends ServiceProvider
                         "role" => Auth::user()->role,
                         "name" => Auth::user()->name,
                         "email" => Auth::user()->email,
+                        "ormawa" => Auth::user()->ormawa,
                     ]
                     : null,
             ],

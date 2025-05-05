@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Ormawa extends Model
 {
+    protected $table = "ormawas";
     protected $fillable = ["name", "description", "logo"];
 
     public function members()

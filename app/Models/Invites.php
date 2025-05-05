@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Invites extends Model
 {
     protected $table = "invites";
-    protected $fillable = ["token", "ormawaId", "createdBy", "role"];
+    protected $fillable = ["token", "ormawaId", "createdBy", "role", "status"];
 
     public function ormawa()
     {
