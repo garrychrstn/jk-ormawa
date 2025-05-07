@@ -2,10 +2,11 @@ import { useEffect, useState } from "react";
 import Layout from "../Layout";
 import FormModal from "./FormModal";
 import { Card } from "./Card";
-import { router } from "@inertiajs/react";
+import { Link, router } from "@inertiajs/react";
 import { ThermometerSnowflakeIcon } from "lucide-react";
 
 const Index = ({ events = [] }) => {
+    document.title = "Events | MORG"
     const [list, setlist] = useState(events);
     const [addEvent, setAddEvent] = useState({
         open: false,
@@ -25,7 +26,7 @@ const Index = ({ events = [] }) => {
                 />
             )}
             <header className="flex justify-between items-center mb-4">
-                <h1 className="text-xl font-semibold">Listing</h1>
+                <h1 className="text-xl font-semibold">Daftar Event</h1>
                 <button
                     onClick={() => setAddEvent({ ...addEvent, open: true })} // Ensure the state is updated correctly
                     className="px-3 py-1 bg-slate-200 hover:bg-slate-400 transition-colors rounded"
@@ -33,17 +34,16 @@ const Index = ({ events = [] }) => {
                     + New
                 </button>
             </header>
-            <div className="listing grid md:grid-cols-4 grid-cols-2 gap-3">
+            <div className="listing grid md:grid-cols-5 grid-cols-2 gap-3">
                 {list.length > 0 ? (
                     list.map((event) => (
-                        <a
+                        <Link
                             href={`/event/${event.token}`}
-                            target="_blank"
                             key={event.id}
                             className="h-full flex"
                         >
                             <Card event={event} className="flex-grow" />
-                        </a>
+                        </Link>
                     ))
                 ) : (
                     <div className="w-full text-gray-500">

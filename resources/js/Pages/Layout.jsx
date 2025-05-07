@@ -86,9 +86,9 @@ const Layout = ({ children }) => {
                     onBackdropClick={() => setSidebar(false)}
                 >
                     <button className="text-center m-auto flex items-center" onClick={() => router.visit
-                        ('/')}>
+                        ('/dashboard')}>
                         <div className="flex  py-8 justify-center gap-1 text-slate rounded-md items-center m-auto">
-                            <img src='images/indonusa.png' alt='morg Logo' className="w-14" />
+                            <img src='/images/indonusa.png' alt='morg Logo' className="w-14" />
                             <p
                                 className={`title ${sidebar ? "block" : "hidden"
                                     }`}

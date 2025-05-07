@@ -4,8 +4,10 @@ import { router, useForm } from "@inertiajs/react";
 import { toast } from "react-toastify";
 import { Box, Modal } from "@mui/material";
 import { defaultModalStyling } from "../utility";
+import { ChevronLeft } from "lucide-react";
 
 const View = ({ event }) => {
+    document.title = "View Event | MORG"
     const [page, setPage] = useState("detail");
     const [edit, setEdit] = useState(false);
     const [image, setImage] = useState({
@@ -28,7 +30,7 @@ const View = ({ event }) => {
     }
     return (
         <section className="flex flex-col gap-4">
-            <header className="mb-2">
+            <header>
                 <Modal position='center' open={image.open} onClose={() => setImage({ open: false, path: '' })}>
                     <Box sx={{
                         position: 'absolute',
@@ -43,13 +45,22 @@ const View = ({ event }) => {
                     </Box>
                 </Modal>
                 <div className="flex items-center justify-between">
-                    <h1 className="font-semibold">
-                        <span>
-                            {event.title}
-                        </span>
-                        <span className="block text-sm italic font-normal">Dibuat oleh : {event.creator.name}</span>
-                        <span className="block text-sm italic font-normal">Link : {`/event/register/${event.token}`}</span>
-                    </h1>
+                    <div>
+                        <div className="flex items-center gap-2 mb-2">
+                            <button onClick={() => window.history.back()} className="rounded-md p-1 bg-slate-200">
+                                <ChevronLeft />
+                            </button>
+                            <span className="font-semibold">
+                                {event.title} <span className={`my-2 inline font-semibold text-sm text-slate-900 ${event.active ? 'bg-green-200' : 'bg-red-200'} rounded-md px-3 py-1`}>
+                                    {event.active ? 'active' : 'inactive'}
+                                </span>
+                            </span>
+                        </div>
+                        <h1 className="block">
+                            <span className="block text-sm italic font-normal">Dibuat oleh : {event.creator.name}</span>
+                            <span className="my-2 block text-sm italic font-normal">Link : <span className="bg-slate-200 rounded-md px-3 py-1">{`/event/register/${event.token}`}</span></span>
+                        </h1>
+                    </div>
                     <div className="switch flex items-center gap-2 p-1 bg-[#e5ebf0] rounded-lg">
                         <button
                             onClick={() => setPage("detail")}
@@ -208,11 +219,12 @@ const View = ({ event }) => {
                             <table className="table-auto w-full border-collapse border border-gray-300">
                                 <thead>
                                     <tr className="bg-gray-100">
-                                        {["No", "Nama", "Email", "Nomor WA", "Pembayaran", "Acc"].map((header, idx) => (
-                                            <th key={idx} className="border border-gray-300 px-4 py-2 text-center font-medium">
-                                                {header}
-                                            </th>
-                                        ))}
+                                        <th className="border border-gray-300 px-4 py-2 text-center font-medium">No</th>
+                                        <th className="border border-gray-300 px-4 py-2 text-center font-medium">Nama</th>
+                                        <th className="border border-gray-300 px-4 py-2 text-center font-medium">Email</th>
+                                        <th className="border border-gray-300 px-4 py-2 text-center font-medium">Nomor WA</th>
+                                        <th className="border border-gray-300 px-4 py-2 text-center font-medium">Pembayaran</th>
+                                        <th className="border border-gray-300 px-4 py-2 text-center font-medium">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -221,24 +233,27 @@ const View = ({ event }) => {
                                             <td className="border border-gray-300 px-4 py-2 text-center">
                                                 {index + 1}
                                             </td>
-                                            {["name", "email", "phoneNumber"].map((field, idx) => (
-                                                <td key={idx} className="border border-gray-300 px-4 py-2 text-center">
-                                                    {participant[field]}
-                                                </td>
-                                            ))}
+                                            <td className="border border-gray-300 px-4 py-2 text-center">
+                                                {participant.name}
+                                            </td>
+                                            <td className="border border-gray-300 px-4 py-2 text-center">
+                                                {participant.email}
+                                            </td>
+                                            <td className="border border-gray-300 px-4 py-2 text-center">
+                                                <a href={`https://wa.me/${participant.phoneNumber}`} target="_blank">{participant.phoneNumber}</a>
+                                            </td>
                                             <td className="border border-gray-300 px-4 py-2 text-center">
                                                 <button
                                                     onClick={() => setImage({ open: true, path: participant.payment })}
-                                                    className="px-2 py-1 bg-blue-500 text-white rounded-md"
+                                                    className="px-2 py-1 text-sm bg-slate-500 text-white rounded-md"
                                                 >
-                                                    Toggle Image
+                                                    Cek Bukti
                                                 </button>
                                             </td>
                                             <td className="border border-gray-300 px-4 py-2 text-center">
                                                 <input
                                                     type="checkbox"
                                                     checked={participant.isApproved}
-                                                    disabled
                                                     className="h-4 w-4"
                                                 />
                                             </td>
@@ -250,7 +265,7 @@ const View = ({ event }) => {
                     </div>
                 )}
             </section>
-        </section>
+        </section >
     );
 };
 

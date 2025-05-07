@@ -19,6 +19,7 @@ class Events extends Model
         "createdBy",
         "price",
         "token",
+        "active",
     ];
 
     public function ormawa()
