@@ -1,18 +1,20 @@
-import { useEffect, useState } from "react"
-import Layout from "../Layout"
-import FormModal from "./FormModal"
-import { Card } from "./Card"
+import { useEffect, useState } from "react";
+import Layout from "../Layout";
+import FormModal from "./FormModal";
+import { Card } from "./Card";
+import { router } from "@inertiajs/react";
+import { ThermometerSnowflakeIcon } from "lucide-react";
 
 const Index = ({ events = [] }) => {
-    const [list, setlist] = useState(events)
+    const [list, setlist] = useState(events);
     const [addEvent, setAddEvent] = useState({
         open: false,
         data: null,
-        edit: false
-    })
+        edit: false,
+    });
     useEffect(() => {
-        console.log('events', events)
-    }, [events])
+        console.log("events", events);
+    }, [events]);
 
     return (
         <section>
@@ -34,17 +36,24 @@ const Index = ({ events = [] }) => {
             <div className="listing grid md:grid-cols-4 grid-cols-2 gap-3">
                 {list.length > 0 ? (
                     list.map((event) => (
-                        <div key={event.id} className="h-full flex">
+                        <a
+                            href={`/event/${event.token}`}
+                            target="_blank"
+                            key={event.id}
+                            className="h-full flex"
+                        >
                             <Card event={event} className="flex-grow" />
-                        </div>
+                        </a>
                     ))
                 ) : (
-                    <div className="w-full text-gray-500">No event available</div>
+                    <div className="w-full text-gray-500">
+                        No event available
+                    </div>
                 )}
             </div>
         </section>
-    )
-}
+    );
+};
 
-Index.layout = (page) => <Layout children={page} />
-export default Index
+Index.layout = (page) => <Layout children={page} />;
+export default Index;

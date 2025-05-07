@@ -36,16 +36,16 @@ class UserController extends Controller
         $user = User::where("email", $data["email"])->first();
         if (!$user) {
             return redirect()
-                ->back()
-                ->withErrors("Invalid Credentials")
-                ->withInput();
+            ->back()
+            ->withErrors("Invalid Credentials")
+            ->withInput();
         }
         if (
             Auth::attempt([
                 "email" => $data["email"],
                 "password" => $data["password"],
-            ])
-        ) {
+                ])
+                ) {
             $request->session()->regenerate();
             if ($user->role !== "user") {
                 return redirect("/dashboard");

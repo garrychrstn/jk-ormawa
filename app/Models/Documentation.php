@@ -8,5 +8,5 @@ class Documentation extends Model
 {
     protected $fillable = [
     'eventId', 'type', 'doc', 'userId'
-    ]
+    ];
 }

@@ -17,7 +17,7 @@ Route::prefix("user")->group(function () {
 });
 
 Route::prefix("/event")->group(function () {
-    Route::get("/register/{id}", [EventController::class, "register"]);
+    Route::get("/register/{token}", [EventController::class, "register"]);
     Route::post("/register", [EventController::class, "join"]);
 });
 Route::middleware(["auth", "isOrmawa"])->group(function () {
@@ -32,6 +32,8 @@ Route::middleware(["auth", "isOrmawa"])->group(function () {
     });
     Route::prefix("/event")->group(function () {
         Route::get("/", [EventController::class, "index"]);
+        Route::post("/update", [EventController::class, "update"]);
         Route::post("/create", [EventController::class, "store"]);
+        Route::get("/{token}", [EventController::class, "view"]);
     });
 });

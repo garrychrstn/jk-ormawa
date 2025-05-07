@@ -2,15 +2,63 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Support\Facades\Auth;
-use Illuminate\Http\Request;
-use App\Models\Events;
-use App\Models\Registration;
 use Inertia\Inertia;
+use App\Models\Events;
+use Illuminate\Support\Str;
+use App\Models\Registration;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 
 class EventController extends Controller
 {
+    public function view($token)
+    {
+        $event = Events::where("token", $token)
+            ->with("ormawa", "creator", "participant")
+            ->first();
+
+        return Inertia::render("Events/View", ["event" => $event]);
+    }
+    public function update(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            $data = $request->all();
+            $event = Events::findOrFail($data["id"]);
+            unset(
+                $data["id"],
+                $data["ormawa"],
+                $data["ormawaId"],
+                $data["poster"],
+                $data["token"]
+            );
+
+            if ($request->hasFile("poster")) {
+                $currentTime = now()->timestamp;
+                $imageName =
+                    "event" .
+                    $event->id .
+                    "_" .
+                    $currentTime .
+                    "." .
+                    $request->file("poster")->getClientOriginalExtension();
+                $imagePath = $request
+                    ->file("poster")
+                    ->storeAs("events", $imageName, "public");
+                $data["poster"] = $imagePath;
+            }
+            $data["createdBy"] = Auth::user()->id;
+            $event->update($data);
+            DB::commit();
+            return redirect()
+                ->back()
+                ->with("success", "Event updated successfully");
+        } catch (\Exception $err) {
+            DB::rollback();
+            return redirect()->back()->withErrors()->withInput();
+        }
+    }
     public function join(Request $request)
     {
         $data = $request->validate([
@@ -36,9 +84,9 @@ class EventController extends Controller
         Registration::create($data);
         return redirect()->back()->with("success", "Registered successfully");
     }
-    public function register($id)
+    public function register($token)
     {
-        $event = Events::where("id", $id)->with("ormawa")->first();
+        $event = Events::where("token", $token)->with("ormawa")->first();
         if ($event->registrationEnd < now()) {
             abort(404);
         }
@@ -64,6 +112,7 @@ class EventController extends Controller
                 "title" => "required|string",
                 "description" => "required|string|max:3000",
                 "location" => "required|string",
+                "price" => "required",
                 "poster" => "required|image",
                 "registrationStart" => "required|date",
                 "registrationEnd" =>
@@ -92,12 +141,15 @@ class EventController extends Controller
             $imagePath = $request
                 ->file("poster")
                 ->storeAs("events", $imageName, "public");
+            $data["token"] = Str::random(10);
             $data["poster"] = $imagePath;
             $data["ormawaId"] = Auth::user()->ormawaId;
             $data["createdBy"] = Auth::user()->id;
             $newEvent = Events::create($data);
             DB::commit();
-            return redirect()->back();
+            return redirect()
+                ->back()
+                ->with("success", "Event created successfully");
         } catch (\Exception $e) {
             dd($e->getMessage());
             DB::rollback();

@@ -17,6 +17,8 @@ class Events extends Model
         "eventEnd",
         "ormawaId",
         "createdBy",
+        "price",
+        "token",
     ];
 
     public function ormawa()
@@ -32,5 +34,9 @@ class Events extends Model
     public function docs()
     {
         return $this->hasMany(Documentation::class, "eventId", "id");
+    }
+    public function participant()
+    {
+        return $this->hasMany(Registration::class, "eventId");
     }
 }

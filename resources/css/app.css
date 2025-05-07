@@ -15,6 +15,10 @@
 button {
     @apply cursor-pointer;
 }
+input,
+textarea {
+    @apply outline-none;
+}
 .ps-menu-button.ps-active {
     background-color: #e5ebf0 !important;
     color: #000 !important;
