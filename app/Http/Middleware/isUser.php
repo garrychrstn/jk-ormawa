@@ -18,6 +18,6 @@ class IsUser
         if (Auth::check() && Auth::user()->role === "user") {
             return $next($request);
         }
-        return redirect()->route("login");
+        return redirect("/");
     }
 }

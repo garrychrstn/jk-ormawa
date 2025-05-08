@@ -32,6 +32,9 @@ class InviteController extends Controller
             } else {
                 $data["role"] = "member";
             }
+            if (!Auth::user()->isPj) {
+                abort(401);
+            }
             $data["status"] = "pending";
             $data["createdBy"] = Auth::user()->id;
             $data["token"] = Str::random(16);

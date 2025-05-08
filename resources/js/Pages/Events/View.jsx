@@ -4,7 +4,10 @@ import { router, useForm } from "@inertiajs/react";
 import { toast } from "react-toastify";
 import { Box, Modal } from "@mui/material";
 import { defaultModalStyling } from "../utility";
-import { ChevronLeft } from "lucide-react";
+import { Check, ChevronLeft, Trash2 } from "lucide-react";
+import axios from "axios";
+import { useEffect } from "react";
+import ModalLPJ from "./ModalLPJ";
 
 const View = ({ event }) => {
     document.title = "View Event | MORG"
@@ -13,6 +16,10 @@ const View = ({ event }) => {
     const [image, setImage] = useState({
         open: false,
         path: ''
+    })
+    const [lpj, setLpj] = useState({
+        open: false,
+        data: {}
     })
     const { data, setData, errors, processing } = useForm(event);
 
@@ -28,9 +35,48 @@ const View = ({ event }) => {
         })
         setEdit(false)
     }
+    function activate() {
+        axios.post(`/event/active/${event.id}`)
+            .then(res => {
+                if (!data.active) {
+                    toast.success(`Event di aktifkan`);
+                    setData("active", true);
+                } else {
+                    toast.success(`Event di non-aktifkan`);
+                    setData("active", false);
+                }
+            }).catch(err => {
+                console.log(err)
+            })
+    }
+    function approve(id, action) {
+        axios.post(`/event/approve`, { id, action })
+            .then(res => {
+                toast.success(action ? 'Pendaftaran diterima' : 'Pendaftaran ditolak')
+                const updatedParticipants = data.participant.map(participant =>
+                    participant.id === id ? { ...participant, isApproved: action } : participant
+                );
+                setData("participant", updatedParticipants);
+            })
+            .catch(err => {
+
+            })
+    }
+    function downloadLpj() {
+        const link = document.createElement('a');
+        link.href = `/storage/${event.lpj}`;
+        link.download = event.lpj;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+    useEffect(() => {
+        console.log(event)
+    }, [event])
     return (
         <section className="flex flex-col gap-4">
             <header>
+                {lpj.open && <ModalLPJ open={lpj.open} close={() => setLpj({ open: false, data: {} })} event={event} />}
                 <Modal position='center' open={image.open} onClose={() => setImage({ open: false, path: '' })}>
                     <Box sx={{
                         position: 'absolute',
@@ -51,35 +97,55 @@ const View = ({ event }) => {
                                 <ChevronLeft />
                             </button>
                             <span className="font-semibold">
-                                {event.title} <span className={`my-2 inline font-semibold text-sm text-slate-900 ${event.active ? 'bg-green-200' : 'bg-red-200'} rounded-md px-3 py-1`}>
-                                    {event.active ? 'active' : 'inactive'}
+                                {event.title} <span className={`my-2 inline font-semibold text-sm text-slate-900 ${data.active ? 'bg-green-200' : 'bg-red-200'} rounded-md px-3 py-1`}>
+                                    {data.active ? 'active' : 'inactive'}
                                 </span>
                             </span>
                         </div>
                         <h1 className="block">
                             <span className="block text-sm italic font-normal">Dibuat oleh : {event.creator.name}</span>
-                            <span className="my-2 block text-sm italic font-normal">Link : <span className="bg-slate-200 rounded-md px-3 py-1">{`/event/register/${event.token}`}</span></span>
+                            <span className="my-2 block text-sm italic font-normal">Link : <span className="bg-slate-200 rounded-md px-3 py-1">{`/event/view/${event.token}`}</span></span>
                         </h1>
                     </div>
-                    <div className="switch flex items-center gap-2 p-1 bg-[#e5ebf0] rounded-lg">
+                    <div className="flex items-center gap-2">
+                        {
+                            new Date(event.eventEnd) < new Date() && (
+                                <>
+                                    <button onClick={() => setLpj({ open: true, data: event })} className="px-3 py-1 bg-slate-400 hover:bg-slate-500 transition-all rounded-md text-white">
+                                        Upload LPJ
+                                    </button>
+                                </>
+                            )
+                        }
+                        {event.lpj && (
+                            <button onClick={() => downloadLpj()} className="px-3 py-1 bg-slate-400 hover:bg-slate-500 transition-all rounded-md text-white">Download LPJ</button>
+                        )}
                         <button
-                            onClick={() => setPage("detail")}
-                            className={`${page === "detail" ? "bg-slate-300" : ""
-                                } rounded-md px-3 py-1.5 transition-all duration-200`}
+                            onClick={() => activate()}
+                            className={`px-3 py-1 rounded-md transition-colors ${data.active ? 'bg-red-500 text-white hover:bg-red-700' : 'bg-green-500 text-white hover:bg-green-700'}`}
                         >
-                            Detil
+                            {data.active ? "Deactivate" : "Activate"}
                         </button>
-                        <button
-                            onClick={() => setPage("registration")}
-                            className={`${page === "registration" ? "bg-slate-300" : ""
-                                } rounded-md px-3 py-1.5 transition-all duration-200`}
-                        >
-                            Pendaftaran
-                        </button>
+                        <div className="switch flex items-center gap-2 p-1 bg-[#e5ebf0] rounded-lg">
+                            <button
+                                onClick={() => setPage("detail")}
+                                className={`${page === "detail" ? "bg-slate-300" : ""
+                                    } rounded-md px-3 py-1.5 transition-all duration-200`}
+                            >
+                                Detail
+                            </button>
+                            <button
+                                onClick={() => setPage("peserta")}
+                                className={`${page === "peserta" ? "bg-slate-300" : ""
+                                    } rounded-md px-3 py-1.5 transition-all duration-200`}
+                            >
+                                Peserta
+                            </button>
+                        </div>
                     </div>
                 </div>
             </header>
-            <section className="p-4">
+            <section className="py-4">
                 {page === "detail" ? (
                     <div className="detail flex gap-7 justify-center h-full">
                         <div className="w-full">
@@ -215,6 +281,23 @@ const View = ({ event }) => {
                     </div>
                 ) : (
                     <div>
+                        <div className="mb-4">
+                            <h2 className="text-lg font-semibold">Statistik Pendaftaran</h2>
+                            <div className="flex gap-4 mt-2">
+                                <div className="p-4 bg-blue-100 rounded-md shadow">
+                                    <p className="text-sm font-medium text-gray-700">Total Peserta</p>
+                                    <p className="text-xl font-bold text-blue-600">{data.participant.length}</p>
+                                </div>
+                                <div className="p-4 bg-green-100 rounded-md shadow">
+                                    <p className="text-sm font-medium text-gray-700">Peserta Disetujui</p>
+                                    <p className="text-xl font-bold text-green-600">{data.participant.filter(p => p.isApproved).length}</p>
+                                </div>
+                                <div className="p-4 bg-red-100 rounded-md shadow">
+                                    <p className="text-sm font-medium text-gray-700">Peserta Ditolak</p>
+                                    <p className="text-xl font-bold text-red-600">{data.participant.filter(p => !p.isApproved).length}</p>
+                                </div>
+                            </div>
+                        </div>
                         <div className="overflow-x-auto">
                             <table className="table-auto w-full border-collapse border border-gray-300">
                                 <thead>
@@ -228,7 +311,7 @@ const View = ({ event }) => {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {event.participant.map((participant, index) => (
+                                    {data.participant.map((participant, index) => (
                                         <tr key={index} className="hover:bg-gray-50">
                                             <td className="border border-gray-300 px-4 py-2 text-center">
                                                 {index + 1}
@@ -251,11 +334,63 @@ const View = ({ event }) => {
                                                 </button>
                                             </td>
                                             <td className="border border-gray-300 px-4 py-2 text-center">
-                                                <input
+                                                {/* <input
                                                     type="checkbox"
                                                     checked={participant.isApproved}
                                                     className="h-4 w-4"
-                                                />
+                                                /> */}
+                                                {participant.isApproved ? (
+                                                    <button onClick={() => approve(participant.id, false)} className="bg-red-400 p-1.5 rounded-md text-white">
+                                                        <Trash2 size={18} />
+                                                    </button>
+                                                ) : (
+                                                    <button onClick={() => approve(participant.id, true)} className="bg-green-400 p-1.5 rounded-md text-white">
+                                                        <Check size={18} />
+                                                    </button>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div className="overflow-x-auto">
+                            <h2 className="text-lg font-semibold">Feedback peserta</h2>
+                            <table className="table-auto w-full border-collapse border border-gray-300">
+                                <thead>
+                                    <tr className="bg-gray-100">
+                                        <th className="border border-gray-300 px-4 py-2 text-center font-medium">No</th>
+                                        <th className="border border-gray-300 px-4 py-2 text-center font-medium">Nama</th>
+                                        <th className="border border-gray-300 px-4 py-2 text-center font-medium">Email</th>
+                                        <th className="border border-gray-300 px-4 py-2 text-center font-medium">Feedback</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {data.feedback.map((feed, index) => (
+                                        <tr key={index} className="hover:bg-gray-50">
+                                            <td className="border border-gray-300 px-4 py-2 text-center">
+                                                {index + 1}
+                                            </td>
+                                            <td className="border border-gray-300 px-4 py-2 text-center">
+                                                {feed.name ? (
+                                                    <span>{feed.name}</span>
+                                                ) : (
+                                                    <span className="text-gray-600 italic">
+                                                        anonimus
+                                                    </span>
+                                                )}
+                                            </td>
+                                            <td className="border border-gray-300 px-4 py-2 text-center">
+                                                {feed.email ? (
+                                                    <span>{feed.email}</span>
+                                                ) : (
+                                                    <span className="text-gray-600 italic">
+                                                        anonimus
+                                                    </span>
+                                                )}
+                                            </td>
+                                            <td className="border border-gray-300 px-4 py-2 text-center">
+                                                {feed.feedback}
                                             </td>
                                         </tr>
                                     ))}

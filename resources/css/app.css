@@ -12,7 +12,8 @@
         "Noto Color Emoji";
 }
 
-button {
+button,
+label {
     @apply cursor-pointer;
 }
 input,

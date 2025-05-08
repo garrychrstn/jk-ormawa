@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Inertia\Inertia;
 use App\Models\Events;
+use App\Models\Feedback;
 use Illuminate\Support\Str;
 use App\Models\Registration;
 use Illuminate\Http\Request;
@@ -12,10 +13,57 @@ use Illuminate\Support\Facades\Auth;
 
 class EventController extends Controller
 {
+    public function lpj(Request $request)
+    {
+        $data = $request->validate([
+            "id" => "required",
+            "lpj" => "required|file|mimes:pdf",
+        ]);
+        $event = Events::with("ormawa")->find($data["id"]);
+        if (!$event) {
+            abort(404);
+        }
+        $currentTime = now()->timestamp;
+        $lpjName =
+            "lpj" .
+            $event->id .
+            "_" .
+            $currentTime .
+            "." .
+            $request->file("lpj")->getClientOriginalExtension();
+        $lpjPath = $request->file("lpj")->storeAs("lpj", $lpjName, "public");
+
+        $event->lpj = $lpjPath;
+        $event->save();
+
+        return redirect()->back()->with("success", "success");
+    }
+    public function approve(Request $request)
+    {
+        $data = $request->validate([
+            "id" => "required",
+            "action" => "required",
+        ]);
+        $participant = Registration::find($data["id"]);
+        if (!$participant) {
+            abort(404);
+        }
+        $participant->isApproved = $data["action"];
+        $participant->save();
+        return response()->json(["status" => "ok"]);
+    }
+    public function active($id)
+    {
+        $event = Events::find($id);
+        $event->active = !$event->active;
+        $event->save();
+
+        return response()->json(["status" => "ok"]);
+    }
     public function view($token)
     {
         $event = Events::where("token", $token)
-            ->with("ormawa", "creator", "participant")
+            ->with("ormawa", "creator", "participant", "feedback")
             ->first();
 
         return Inertia::render("Events/View", ["event" => $event]);
@@ -80,17 +128,35 @@ class EventController extends Controller
             ->file("payment")
             ->storeAs("registrations", $imageName, "public");
         $data["payment"] = $imagePath;
-
+        $data["isApproved"] = true;
         Registration::create($data);
         return redirect()->back()->with("success", "Registered successfully");
     }
-    public function register($token)
+    public function inspect($token)
     {
-        $event = Events::where("token", $token)->with("ormawa")->first();
-        if ($event->registrationEnd < now()) {
+        $event = Events::where("token", $token)
+            ->where("active", true)
+            ->with("ormawa")
+            ->first();
+        if (!$event) {
             abort(404);
         }
+
         return Inertia::render("Events/Register", ["event" => $event]);
+    }
+    public function feedback(Request $request)
+    {
+        $data = $request->validate([
+            "eventId" => "required",
+            "feedback" => "required",
+            "name" => "",
+            "email" => "",
+        ]);
+
+        $event = Events::findOrFail($data["eventId"]);
+
+        Feedback::create($data);
+        return redirect()->back()->with("success", "feedback is sent");
     }
     public function index()
     {

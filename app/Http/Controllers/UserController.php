@@ -11,6 +11,17 @@ use Inertia\Inertia;
 
 class UserController extends Controller
 {
+    public function member()
+    {
+        $member = User::where("role", "ormawa")
+            ->where("ormawaId", Auth::user()->ormawaId)
+            ->get();
+        $invites = Invites::where("ormawaId", Auth::user()->ormawaId)->get();
+        return Inertia::render("Ormawa/Member", [
+            "member" => $member,
+            "invites" => $invites,
+        ]);
+    }
     public function catalogue()
     {
         $events = Events::where("eventEnd", ">", now())
@@ -36,16 +47,16 @@ class UserController extends Controller
         $user = User::where("email", $data["email"])->first();
         if (!$user) {
             return redirect()
-            ->back()
-            ->withErrors("Invalid Credentials")
-            ->withInput();
+                ->back()
+                ->withErrors("Invalid Credentials")
+                ->withInput();
         }
         if (
             Auth::attempt([
                 "email" => $data["email"],
                 "password" => $data["password"],
-                ])
-                ) {
+            ])
+        ) {
             $request->session()->regenerate();
             if ($user->role !== "user") {
                 return redirect("/dashboard");

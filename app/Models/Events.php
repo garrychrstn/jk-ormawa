@@ -20,6 +20,7 @@ class Events extends Model
         "price",
         "token",
         "active",
+        "lpj",
     ];
 
     public function ormawa()
@@ -39,5 +40,9 @@ class Events extends Model
     public function participant()
     {
         return $this->hasMany(Registration::class, "eventId");
+    }
+    public function feedback()
+    {
+        return $this->hasMany(Feedback::class, "eventId");
     }
 }

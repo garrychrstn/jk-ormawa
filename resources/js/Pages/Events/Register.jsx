@@ -2,26 +2,35 @@ import { router, useForm } from "@inertiajs/react"
 import { Box, Modal } from "@mui/material"
 import { useEffect, useState } from "react"
 import { toast, ToastContainer } from "react-toastify"
-import { defaultModalStyling } from "../utility"
+import { defaultModalStyling, formatToRupiah } from "../utility"
 import axios from "axios"
 
 const Register = ({ event }) => {
     const { data, setData, errors, processing } = useForm()
     const [register, setRegister] = useState(false)
+    const [review, setReview] = useState(false)
     const [success, setSuccess] = useState(false)
     useEffect(() => {
         setData('eventId', event.id)
     }, [event])
     function submit() {
-        if (!data.name || !data.email || !data.phoneNumber || !data.payment) {
-            toast.error('All field must be filled')
-            return
+        const path = register ? '/event/register' : '/event/feedback'
+        if (register) {
+            if (!data.name || !data.email || !data.phoneNumber || !data.payment) {
+                toast.error('All field must be filled')
+                return
+            }
+        } else {
+            if (!data.feedback) {
+                toast.error('All field must be filled')
+                return
+            }
         }
-        router.post('/event/register', data, {
+        router.post(path, data, {
             onSuccess: res => {
                 console.log(res)
                 setSuccess(true)
-                toast.success("Registration successfull");
+                toast.success("Operation successfull");
             },
             onError: err => {
 
@@ -129,6 +138,81 @@ const Register = ({ event }) => {
                     </Box>
                 </Modal>
             )}
+            {review && (
+                <Modal position='center' open={review} onClose={() => setReview(false)}>
+                    <Box sx={{
+                        position: 'absolute',
+                        top: '50%',
+                        left: '50%',
+                        transform: 'translate(-50%, -50%)',
+                        width: 400,
+                        bgcolor: 'background.paper',
+                        boxShadow: 24,
+                        p: 4,
+                        borderRadius: '10px'
+                    }}>
+                        <div>
+                            {success && (
+                                <div className="px-3 py-1.5 bg-green-500 rounded-lg text-white mb-4">
+                                    <span className="text-white block">
+                                        Review Successful
+                                    </span>
+                                </div>
+                            )}
+                            <div className="space-y-4">
+                                <div>
+                                    <div>
+                                        <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name (opsional)</label>
+                                        <input
+                                            type="text"
+                                            id="name"
+                                            name="name"
+                                            value={data.name || ''}
+                                            onChange={(e) => setData('name', e.target.value)}
+                                            placeholder="Enter your name (opsional)"
+                                            className="mt-1 px-3 py-2 block w-full border-gray-300 rounded-md border focus:ring-slate-500 focus:outline-none focus:ring-2 sm:text-sm"
+                                        />
+                                        {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
+                                    </div>
+                                    <div>
+                                        <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email (opsional)</label>
+                                        <input
+                                            type="text"
+                                            id="email"
+                                            name="email"
+                                            value={data.email || ''}
+                                            onChange={(e) => setData('email', e.target.value)}
+                                            placeholder="Enter your email (opsional)"
+                                            className="mt-1 px-3 py-2 block w-full border-gray-300 rounded-md border focus:ring-slate-500 focus:outline-none focus:ring-2 sm:text-sm"
+                                        />
+                                        {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
+                                    </div>
+                                    <label htmlFor="feedback" className="block text-sm font-medium text-gray-700">Feedback </label>
+                                    <textarea
+                                        type="text"
+                                        id="feedback"
+                                        name="feedback"
+                                        value={data.feedback || ''}
+                                        onChange={(e) => setData('feedback', e.target.value)}
+                                        placeholder="Masukan feedback anda"
+                                        className="mt-1 px-3 py-2 block w-full border-gray-300 rounded-md border focus:ring-slate-500 focus:outline-none focus:ring-2 sm:text-sm"
+                                    />
+                                    {errors.feedback && <p className="text-red-500 text-xs mt-1">{errors.feedback}</p>}
+                                </div>
+                                <div>
+                                    <button
+                                        onClick={submit}
+                                        disabled={processing}
+                                        className="w-full py-2 px-4 bg-slate-500 text-white rounded-md shadow-sm hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500"
+                                    >
+                                        Submit
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </Box>
+                </Modal>
+            )}
             <div className="lg:flex gap-7 items-center lg:h-screen">
                 <div>
                     <div className="mb-4">
@@ -141,6 +225,9 @@ const Register = ({ event }) => {
                 <div>
                     <h1 className="text-2xl font-bold text-gray-800 mb-2">{event.title}</h1>
                     <p className="text-gray-700 mb-4 whitespace-pre-line">{event.description}</p>
+                    <span className="text-lg text-gray-700 font-bold mb-3 block">
+                        Fee : {formatToRupiah(event.price)}
+                    </span>
                     <p className="text-gray-600 mb-2">
                         <strong className="font-semibold">Start:</strong> {new Date(event.eventStart).toLocaleString()}
                     </p>
@@ -151,13 +238,23 @@ const Register = ({ event }) => {
                         <strong className="font-semibold">Location:</strong> {event.location}
                     </p>
 
-                    <button
-                        onClick={() => setRegister(true)}
-                        disabled={processing}
-                        className="w-full mt-4 py-2 px-4 bg-slate-500 text-white rounded-md shadow-sm hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500"
-                    >
-                        Register
-                    </button>
+                    {new Date(event.eventEnd) < new Date() && (
+                        <button
+                            onClick={() => setReview(true)}
+                            className="w-full mt-4 py-2 px-4 bg-blue-500 text-white rounded-md shadow-sm hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                        >
+                            Review
+                        </button>
+                    )}
+                    {new Date(event.registrationEnd) >= new Date() && (
+                        <button
+                            onClick={() => setRegister(true)}
+                            disabled={processing}
+                            className="w-full mt-4 py-2 px-4 bg-slate-500 text-white rounded-md shadow-sm hover:bg-slate-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500"
+                        >
+                            Register
+                        </button>
+                    )}
                 </div>
             </div>
         </section >

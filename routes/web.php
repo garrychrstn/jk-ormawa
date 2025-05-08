@@ -17,14 +17,21 @@ Route::prefix("user")->group(function () {
 });
 
 Route::prefix("/event")->group(function () {
-    Route::get("/register/{token}", [EventController::class, "register"]);
+    Route::get("/view/{token}", [EventController::class, "inspect"]);
     Route::post("/register", [EventController::class, "join"]);
+    Route::post("/feedback", [EventController::class, "feedback"]);
 });
+
 Route::middleware(["auth", "isOrmawa"])->group(function () {
     Route::get("/dashboard", [UserController::class, "dashboard"]);
+    Route::prefix("member")->group(function () {
+        Route::get("/", [UserController::class, "member"]);
+    });
     Route::prefix("ormawa")->group(function () {
         Route::get("/", [OrmawaController::class, "index"]);
-        Route::post("/create", [OrmawaController::class, "store"]);
+        Route::post("/create", [OrmawaController::class, "store"])->middleware(
+            "isAdmin"
+        );
     });
     Route::prefix("/invites")->group(function () {
         Route::get("/", [InviteController::class, "index"]);
@@ -32,8 +39,11 @@ Route::middleware(["auth", "isOrmawa"])->group(function () {
     });
     Route::prefix("/event")->group(function () {
         Route::get("/", [EventController::class, "index"]);
+        Route::post("/approve/", [EventController::class, "approve"]);
         Route::post("/update", [EventController::class, "update"]);
         Route::post("/create", [EventController::class, "store"]);
+        Route::post("/active/{id}", [EventController::class, "active"]);
+        Route::post("/lpj", [EventController::class, "lpj"]);
         Route::get("/{token}", [EventController::class, "view"]);
     });
 });

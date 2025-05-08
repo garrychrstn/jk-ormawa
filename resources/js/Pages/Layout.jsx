@@ -1,22 +1,11 @@
 import { Link, router, usePage } from "@inertiajs/react";
 import {
     Calendar1,
-    Check,
-    CircleAlert,
-    Clock3,
-    Computer,
     Home,
-    Library,
-    Loader,
-    LogIn,
     LogOut,
     PanelLeftDashed,
-    PanelRight,
-    Printer,
-    TentTree,
-    Ticket,
     User2,
-    Users2,
+    Users,
     X,
 } from "lucide-react";
 import React, { useEffect, useState } from "react";
@@ -133,14 +122,24 @@ const Layout = ({ children }) => {
                             </MenuItem>
                         )}
                         {auth?.user?.role === 'ormawa' && (
-                            <MenuItem
-                                id="event"
-                                icon={<Calendar1 />}
-                                active={url.startsWith('/event')}
-                                component={<Link href='/event' />}
-                            >
-                                Event
-                            </MenuItem>
+                            <>
+                                <MenuItem
+                                    id="event"
+                                    icon={<Calendar1 />}
+                                    active={url.startsWith('/event')}
+                                    component={<Link href='/event' />}
+                                >
+                                    Event
+                                </MenuItem>
+                                <MenuItem
+                                    id="member"
+                                    icon={<Users />}
+                                    active={url.startsWith('/member')}
+                                    component={<Link href='/member' />}
+                                >
+                                    Anggota
+                                </MenuItem>
+                            </>
                         )}
                     </Menu>
                 </Sidebar>
