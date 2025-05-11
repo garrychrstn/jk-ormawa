@@ -7,12 +7,61 @@ use App\Models\Events;
 use App\Models\Feedback;
 use Illuminate\Support\Str;
 use App\Models\Registration;
+use App\Models\Documentation;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 
 class EventController extends Controller
 {
+    public function documentation(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            $request->validate([
+                "documentation" => "required|array",
+                "documentation.*" => "file|max:10240",
+                "eventId" => "required|integer",
+            ]);
+
+            $uploadedFiles = [];
+            foreach ($request->file("documentation") as $file) {
+                $currentTime = now()->timestamp;
+                $eventId = $request->input("eventId");
+                $i = 1;
+                do {
+                    $fileName =
+                        "event_{$eventId}_{$currentTime}_{$i}." .
+                        $file->getClientOriginalExtension();
+                    $i++;
+                } while (
+                    file_exists(
+                        storage_path(
+                            "app/public/event_documentation/{$fileName}"
+                        )
+                    )
+                );
+                $filePath = $file->storeAs(
+                    "event_documentation",
+                    $fileName,
+                    "public"
+                );
+                Documentation::create([
+                    "eventId" => $eventId,
+                    "type" => $file->getClientOriginalExtension(),
+                    "doc" => $filePath,
+                    "userId" => Auth::user()->id,
+                ]);
+            }
+            DB::commit();
+            return redirect()->back();
+        } catch (\Exception $error) {
+            dd($error);
+            DB::rollback();
+            return redirect()->back()->withErrors();
+        }
+    }
+
     public function lpj(Request $request)
     {
         $data = $request->validate([
@@ -33,10 +82,12 @@ class EventController extends Controller
             $request->file("lpj")->getClientOriginalExtension();
         $lpjPath = $request->file("lpj")->storeAs("lpj", $lpjName, "public");
 
+        $event->active = false;
         $event->lpj = $lpjPath;
+        $event->finishedAt = now();
         $event->save();
 
-        return redirect()->back()->with("success", "success");
+        return redirect()->back();
     }
     public function approve(Request $request)
     {
@@ -63,7 +114,7 @@ class EventController extends Controller
     public function view($token)
     {
         $event = Events::where("token", $token)
-            ->with("ormawa", "creator", "participant", "feedback")
+            ->with("ormawa", "creator", "participant", "feedback", "docs")
             ->first();
 
         return Inertia::render("Events/View", ["event" => $event]);
@@ -144,6 +195,20 @@ class EventController extends Controller
 
         return Inertia::render("Events/Register", ["event" => $event]);
     }
+    public function adminfeedback(Request $request)
+    {
+        $data = $request->validate([
+            "feedback" => "required|string",
+            "eventId" => "required",
+        ]);
+
+        $event = Events::find($data["eventId"]);
+
+        $event->adminFeedback = $data["feedback"];
+        $event->save();
+
+        return redirect()->back();
+    }
     public function feedback(Request $request)
     {
         $data = $request->validate([
@@ -162,9 +227,14 @@ class EventController extends Controller
     {
         $events = [];
         if (Auth::user()->role === "admin") {
-            $events = Events::all();
+            $events = Events::with("ormawa")
+                ->orderBy("created_at", "desc")
+                ->get();
         } else {
-            $events = Events::where("ormawaId", Auth::user()->ormawaId)->get();
+            $events = Events::where("ormawaId", Auth::user()->ormawaId)
+                ->with("ormawa")
+                ->orderBy("created_at", "desc")
+                ->get();
         }
         return Inertia::render("Events/Index", [
             "events" => $events,
@@ -178,6 +248,7 @@ class EventController extends Controller
                 "title" => "required|string",
                 "description" => "required|string|max:3000",
                 "location" => "required|string",
+                "waGroup" => "required|string",
                 "price" => "required",
                 "poster" => "required|image",
                 "registrationStart" => "required|date",

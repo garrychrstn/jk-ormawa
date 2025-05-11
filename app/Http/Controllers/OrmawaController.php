@@ -5,9 +5,46 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use App\Models\Ormawa;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\Auth;
 
 class OrmawaController extends Controller
 {
+    public function view($id)
+    {
+        $ormawa = Ormawa::with("members", "events")->find($id);
+        if (!$ormawa) {
+            abort(404);
+        }
+
+        return Inertia::render("Ormawa/View", ["ormawa" => $ormawa]);
+    }
+    public function update(Request $request)
+    {
+        $data = $request->validate([
+            "description" => "required|string",
+            "logo" => "nullable",
+        ]);
+
+        $ormawa = Ormawa::find(Auth::user()->ormawaId);
+        if (!$ormawa) {
+            abort(404);
+        }
+        if ($request->hasFile("logo")) {
+            $imageName =
+                explode(" ", trim($ormawa->name))[0] .
+                "." .
+                $request->file("logo")->getClientOriginalExtension();
+
+            $imagePath = $request
+                ->file("logo")
+                ->storeAs("images/logo", $imageName, "public");
+            $data["logo"] = $imagePath;
+        } else {
+            unset($data["logo"]);
+        }
+        $ormawa->update($data);
+        return redirect()->back();
+    }
     public function index()
     {
         $ormawas = Ormawa::all();

@@ -1,4 +1,4 @@
-import { router, useForm } from "@inertiajs/react"
+import { Link, router, useForm } from "@inertiajs/react"
 import { Box, Modal } from "@mui/material"
 import { useEffect, useState } from "react"
 import { toast, ToastContainer } from "react-toastify"
@@ -71,6 +71,9 @@ const Register = ({ event }) => {
                                         Registration Successful
                                     </span>
                                     <span className="text-sm">Please contact admin for confirmation</span>
+                                    <Link href="https://google.com" target="_blank" rel="noopener noreferrer" className="block text-center m-2 bg-green-600 rounded-md p-2" onClick={(e) => { e.preventDefault(); window.open("https://google.com", "_blank"); }}>
+                                        Join Group
+                                    </Link>
                                 </div>
                             )}
                             <div className="space-y-4">

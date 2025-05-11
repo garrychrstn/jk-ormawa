@@ -6,11 +6,30 @@ use Illuminate\Http\Request;
 use App\Models\User;
 use App\Models\Invites;
 use App\Models\Events;
+use App\Models\Ormawa;
 use Illuminate\Support\Facades\Auth;
 use Inertia\Inertia;
 
 class UserController extends Controller
 {
+    public function logout()
+    {
+        Auth::logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+        return redirect("/login");
+    }
+    public function deactivate(Request $request)
+    {
+        $data = $request->validate([
+            "id" => "required",
+        ]);
+
+        $user = User::find($data["id"]);
+        $user->delete();
+
+        return response()->json(["status" => "ok"]);
+    }
     public function member()
     {
         $member = User::where("role", "ormawa")
@@ -33,9 +52,46 @@ class UserController extends Controller
     {
         $user = $user = Auth::user();
         if ($user->role === "admin") {
-            return Inertia::render("DashboardAdmin");
+            $events = Events::with("participant", "ormawa")
+                ->where("active", true)
+                ->get();
+            $ormawa = Ormawa::with("members")->get();
+            $totalEvents = Events::count();
+            $recentEvents = Events::where("finishedAt", ">", now()->subDays(7))
+                ->where("finishedAt", "<=", now())
+                ->get();
+            return Inertia::render("DashboardAdmin", [
+                "events" => $events,
+                "ormawa" => $ormawa,
+                "totalEvents" => $totalEvents,
+                "recentEvents" => $recentEvents,
+            ]);
         } else {
-            return Inertia::render("Dashboard");
+            $ormawa = Ormawa::with("members")->find(Auth::user()->ormawaId);
+            $events = Events::with("participant", "ormawa")
+                ->where("ormawaId", "=", Auth::user()->ormawaId)
+                ->where("active", true)
+                ->get();
+            $eventCount = Events::where(
+                "ormawaId",
+                Auth::user()->ormawaId
+            )->count();
+            $participantSum = Events::where("ormawaId", Auth::user()->ormawaId)
+                ->with("participant")
+                ->get()
+                ->sum(function ($event) {
+                    return $event->participant->count();
+                });
+
+            $participantAverage =
+                $eventCount > 0 ? round($participantSum / $eventCount) : 0;
+            return Inertia::render("Dashboard", [
+                "ormawa" => $ormawa,
+                "events" => $events,
+                "eventCount" => $eventCount,
+                "participantSum" => $participantSum,
+                "participantAverage" => $participantAverage,
+            ]);
         }
     }
     public function signin(Request $request)
@@ -117,12 +173,5 @@ class UserController extends Controller
                 ])
                 ->withInput();
         }
-    }
-    public function logout(Request $request)
-    {
-        Auth::logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-        return redirect("/");
     }
 }

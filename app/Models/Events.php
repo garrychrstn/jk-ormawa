@@ -15,12 +15,15 @@ class Events extends Model
         "registrationEnd",
         "eventStart",
         "eventEnd",
+        "waGroup",
         "ormawaId",
         "createdBy",
         "price",
         "token",
         "active",
         "lpj",
+        "finishedAt",
+        "adminFeedback",
     ];
 
     public function ormawa()

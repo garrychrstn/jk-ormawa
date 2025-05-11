@@ -13,4 +13,8 @@ class Ormawa extends Model
     {
         return $this->hasMany(User::class, "ormawaId", "id");
     }
+    public function events()
+    {
+        return $this->hasMany(Events::class, "ormawaId");
+    }
 }

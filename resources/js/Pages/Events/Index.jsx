@@ -34,23 +34,38 @@ const Index = ({ events = [] }) => {
                     + New
                 </button>
             </header>
-            <div className="listing grid md:grid-cols-5 grid-cols-2 gap-3">
-                {list.length > 0 ? (
-                    list.map((event) => (
-                        <Link
-                            href={`/event/${event.token}`}
-                            key={event.id}
-                            className="h-full flex"
-                        >
-                            <Card event={event} className="flex-grow" />
-                        </Link>
-                    ))
-                ) : (
-                    <div className="w-full text-gray-500">
-                        No event available
-                    </div>
-                )}
-            </div>
+            <section>
+                <h1 className="my-2">Event Active : </h1>
+                <div className="grid grid-cols-5 gap-5">
+                    {list.map(event => {
+                        if (event.active) return (
+                            <Link
+                                href={`/event/${event.token}`}
+                                key={event.id}
+                                className="h-full flex hover:bg-slate-50 transition-all"
+                            >
+                                <Card event={event} className="flex-grow" />
+                            </Link>
+                        )
+                    })}
+                </div>
+            </section>
+            <section>
+                <h1 className="my-2">Event Selesai : </h1>
+                <div className="grid grid-cols-5 gap-5">
+                    {list.map(event => {
+                        if (!event.active) return (
+                            <Link
+                                href={`/event/${event.token}`}
+                                key={event.id}
+                                className="h-full flex hover:bg-slate-50 transition-all"
+                            >
+                                <Card event={event} className="flex-grow" />
+                            </Link>
+                        )
+                    })}
+                </div>
+            </section>
         </section>
     );
 };

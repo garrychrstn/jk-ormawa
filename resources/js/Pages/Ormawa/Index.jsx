@@ -28,7 +28,9 @@ const Index = ({ ormawas }) => {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {ormawas.length > 0 ? (
                     ormawas.map((ormawa) => (
-                        <Card ormawa={ormawa} key={ormawa.id} setInvites={setInvites} />
+                        <section key={ormawa.id} className="flex flex-col h-full">
+                            <Card ormawa={ormawa} setInvites={setInvites} className="flex-1" />
+                        </section>
                     ))
                 ) : (
                     <div className="w-full text-center">

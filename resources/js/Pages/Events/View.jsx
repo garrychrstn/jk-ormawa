@@ -1,6 +1,6 @@
 import { useState } from "react";
 import Layout from "../Layout";
-import { router, useForm } from "@inertiajs/react";
+import { router, useForm, usePage } from "@inertiajs/react";
 import { toast } from "react-toastify";
 import { Box, Modal } from "@mui/material";
 import { defaultModalStyling } from "../utility";
@@ -8,16 +8,23 @@ import { Check, ChevronLeft, Trash2 } from "lucide-react";
 import axios from "axios";
 import { useEffect } from "react";
 import ModalLPJ from "./ModalLPJ";
+import ModalDocumentation from "./ModalDocumentation";
 
 const View = ({ event }) => {
     document.title = "View Event | MORG"
+    const { auth } = usePage().props
     const [page, setPage] = useState("detail");
     const [edit, setEdit] = useState(false);
+    const [adminFeedback, setAdminFeedback] = useState(false)
     const [image, setImage] = useState({
         open: false,
         path: ''
     })
     const [lpj, setLpj] = useState({
+        open: false,
+        data: {}
+    })
+    const [documentation, setDocumentation] = useState({
         open: false,
         data: {}
     })
@@ -70,9 +77,14 @@ const View = ({ event }) => {
         link.click();
         document.body.removeChild(link);
     }
-    useEffect(() => {
-        console.log(event)
-    }, [event])
+    function sendFeedback() {
+        router.post('/event/adminfeedback', { eventId: event.id, feedback: data.adminFeedback }, {
+            onSuccess: res => {
+                toast.success('feedback sent')
+                setAdminFeedback(false)
+            }
+        });
+    }
     return (
         <section className="flex flex-col gap-4">
             <header>
@@ -90,7 +102,29 @@ const View = ({ event }) => {
                         <img src={`/storage/${image.path}`} className="rounded-md w-full object-contain" />
                     </Box>
                 </Modal>
-                <div className="flex items-center justify-between">
+                <Modal position='center' open={adminFeedback} onClose={() => setAdminFeedback(false)} >
+                    <Box sx={defaultModalStyling}>
+                        <h1>Beri feedback pada event ini</h1>
+                        <div className="mb-4">
+                            <textarea
+                                type="text"
+                                value={data.adminFeedback}
+                                onChange={(e) => setData('adminFeedback', e.target.value)}
+                                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border"
+                            />
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <button className="w-full px-3 py-1 hover:bg-slate-500 transition-all rounded-md text-white bg-blue-400">
+                                Cancel
+                            </button>
+                            <button onClick={() => sendFeedback()} className="px-3 py-1 bg-slate-600 hover:bg-slate-700 transition-all rounded-md w-full text-white">
+                                Kirim
+                            </button>
+                        </div>
+                    </Box>
+                </Modal>
+                {documentation.open && <ModalDocumentation open={documentation.open} close={() => setDocumentation({ open: false, data: {} })} event={event} />}
+                <div className="flex flex-wrap items-center justify-between">
                     <div>
                         <div className="flex items-center gap-2 mb-2">
                             <button onClick={() => window.history.back()} className="rounded-md p-1 bg-slate-200">
@@ -107,40 +141,59 @@ const View = ({ event }) => {
                             <span className="my-2 block text-sm italic font-normal">Link : <span className="bg-slate-200 rounded-md px-3 py-1">{`/event/view/${event.token}`}</span></span>
                         </h1>
                     </div>
-                    <div className="flex items-center gap-2">
-                        {
-                            new Date(event.eventEnd) < new Date() && (
-                                <>
-                                    <button onClick={() => setLpj({ open: true, data: event })} className="px-3 py-1 bg-slate-400 hover:bg-slate-500 transition-all rounded-md text-white">
-                                        Upload LPJ
-                                    </button>
-                                </>
-                            )
-                        }
-                        {event.lpj && (
-                            <button onClick={() => downloadLpj()} className="px-3 py-1 bg-slate-400 hover:bg-slate-500 transition-all rounded-md text-white">Download LPJ</button>
-                        )}
-                        <button
-                            onClick={() => activate()}
-                            className={`px-3 py-1 rounded-md transition-colors ${data.active ? 'bg-red-500 text-white hover:bg-red-700' : 'bg-green-500 text-white hover:bg-green-700'}`}
-                        >
-                            {data.active ? "Deactivate" : "Activate"}
-                        </button>
-                        <div className="switch flex items-center gap-2 p-1 bg-[#e5ebf0] rounded-lg">
+                    <div className="ml-auto mt-4 sm:mt-0">
+                        <div className="switch flex justify-center mb-2 items-center gap-2 p-1 bg-[#e5ebf0] rounded-lg">
                             <button
                                 onClick={() => setPage("detail")}
                                 className={`${page === "detail" ? "bg-slate-300" : ""
-                                    } rounded-md px-3 py-1.5 transition-all duration-200`}
+                                    } rounded-md px-3 py-1.5 transition-all w-full duration-200`}
                             >
                                 Detail
                             </button>
                             <button
                                 onClick={() => setPage("peserta")}
                                 className={`${page === "peserta" ? "bg-slate-300" : ""
-                                    } rounded-md px-3 py-1.5 transition-all duration-200`}
+                                    } rounded-md px-3 py-1.5 transition-all  w-full duration-200`}
                             >
                                 Peserta
                             </button>
+                            <button
+                                onClick={() => setPage("documentation")}
+                                className={`${page === "documentation" ? "bg-slate-300" : ""
+                                    } rounded-md px-3 py-1.5 transition-all  w-full duration-200`}
+                            >
+                                Dokumentasi
+                            </button>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            {
+                                new Date(event.eventEnd) < new Date() && !event.lpj && auth?.user?.ormawa?.id === event.ormawaId && (
+                                    <button onClick={() => setLpj({ open: true, data: event })} className="px-3 py-1 bg-slate-400 hover:bg-slate-500 transition-all rounded-md text-white w-full">
+                                        Upload LPJ
+                                    </button>
+                                )
+                            }
+                            {event.lpj && auth?.user?.role === 'admin' && (
+                                <button onClick={() => setAdminFeedback(true)} className="px-3 py-1 bg-slate-600 hover:bg-slate-700 transition-all rounded-md text-white w-full">
+                                    Feedback
+                                </button>
+                            )}
+                            {event.lpj && auth?.user?.ormawa?.id === event.ormawaId && (
+                                <button onClick={() => setLpj({ open: true, data: event })} className="px-3 py-1 bg-slate-400 hover:bg-slate-500 transition-all rounded-md text-white w-full">
+                                    Edit LPJ
+                                </button>
+                            )}
+                            {event.lpj && (
+                                <button onClick={() => downloadLpj()} className="px-3 py-1 bg-slate-400 hover:bg-slate-500 transition-all rounded-md w-full text-white">Download LPJ</button>
+                            )}
+                            {!event.lpj && auth?.user?.ormawa?.id === event.ormawaId && (
+                                <button
+                                    onClick={() => activate()}
+                                    className={`px-3 py-1 rounded-md transition-colors ${data.active ? 'bg-red-500 text-white hover:bg-red-700' : 'bg-green-500 text-white hover:bg-green-700'}`}
+                                >
+                                    {data.active ? "Deactivate" : "Activate"}
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -149,6 +202,14 @@ const View = ({ event }) => {
                 {page === "detail" ? (
                     <div className="detail flex gap-7 justify-center h-full">
                         <div className="w-full">
+                            {event.adminFeedback && (
+                                <div className="mb-4 bg-slate-200 rounded-md p-4">
+                                    <span className="block text-sm font-medium text-gray-700">
+                                        Feedback dari kemahasiswaan
+                                    </span>
+                                    <p>{event.adminFeedback}</p>
+                                </div>
+                            )}
                             <div className="mb-4">
                                 <label className="block text-sm font-medium text-gray-700">
                                     Judul
@@ -170,6 +231,18 @@ const View = ({ event }) => {
                                     onChange={(e) => setData("description", e.target.value)}
                                     disabled={!edit}
                                     className="mt-1 block w-full h-32 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm resize-none px-3 py-2 border"
+                                />
+                            </div>
+                            <div className="mb-4">
+                                <label className="block text-sm font-medium text-gray-700">
+                                    Wa Group
+                                </label>
+                                <input
+                                    type="text"
+                                    value={data.waGroup}
+                                    onChange={(e) => setData("waGroup", e.target.value)}
+                                    disabled={!edit}
+                                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm px-3 py-2 border"
                                 />
                             </div>
                             <div className="mb-4">
@@ -266,12 +339,14 @@ const View = ({ event }) => {
                                         Batal
                                     </button>
                                 )}
-                                <button
-                                    onClick={() => edit ? update() : setEdit(true)}
-                                    className="px-3 py-1 bg-slate-200 hover:bg-slate-400 transition-colors rounded-md"
-                                >
-                                    {edit ? "Simpan" : "Edit"}
-                                </button>
+                                {auth?.user?.ormawa?.id === event.ormawaId && (
+                                    <button
+                                        onClick={() => edit ? update() : setEdit(true)}
+                                        className="px-3 py-1 bg-slate-200 hover:bg-slate-400 transition-colors rounded-md"
+                                    >
+                                        {edit ? "Simpan" : "Edit"}
+                                    </button>
+                                )}
                             </div>
                         </div>
                         <img
@@ -279,7 +354,7 @@ const View = ({ event }) => {
                             className="h-96 rounded-lg"
                         />
                     </div>
-                ) : (
+                ) : page === 'peserta' ? (
                     <div>
                         <div className="mb-4">
                             <h2 className="text-lg font-semibold">Statistik Pendaftaran</h2>
@@ -396,6 +471,29 @@ const View = ({ event }) => {
                                     ))}
                                 </tbody>
                             </table>
+                        </div>
+                    </div>
+                ) : (
+                    <div>
+                        <h2 className="text-lg font-semibold">Dokumentasi</h2>
+                        <header className="w-full flex items-center justify-end mb-4">
+                            <button onClick={() => setDocumentation({ ...documentation, open: true })} className="bg-slate-400 rounded-md text-white px-2 py-1 hover:bg-slate-500 transition-all">
+                                Tambah Dokumentasi
+                            </button>
+                        </header>
+                        <div className="flex justify-center">
+                            <div className="docs grid grid-cols-2 md:grid-cols-6 gap-3">
+                                {event.docs
+                                    .filter(doc => ['png', 'jpg', 'jpeg'].includes(doc.type))
+                                    .map((doc, index) => (
+                                        <img
+                                            key={index}
+                                            src={`/storage/${doc.doc}`}
+                                            alt={`Documentation ${index + 1}`}
+                                            className="w-64 object-cover rounded-md"
+                                        />
+                                    ))}
+                            </div>
                         </div>
                     </div>
                 )}

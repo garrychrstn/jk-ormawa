@@ -12,6 +12,16 @@ use Illuminate\Http\Request;
 
 class InviteController extends Controller
 {
+    public function delete($id)
+    {
+        $invite = Invites::find($id);
+        if (!$invite) {
+            abort(404);
+        }
+
+        $invite->delete();
+        return response()->json(["status" => "ok"]);
+    }
     public function index(Request $request)
     {
         $id = $request->query("id");

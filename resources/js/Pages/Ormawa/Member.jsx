@@ -3,8 +3,10 @@ import Layout from "../Layout"
 import axios from "axios"
 import { usePage } from "@inertiajs/react"
 import { toast } from "react-toastify"
+import { Minus } from "lucide-react"
 
 const Member = ({ member, invites }) => {
+    document.title = 'Anggota | MORG'
     const [page, setPage] = useState('member')
     const [invite, setInvite] = useState(invites || [])
     const [members, setMembers] = useState(member || [])
@@ -22,6 +24,23 @@ const Member = ({ member, invites }) => {
                 console.error('Error generating token:', err);
                 toast.error('Failed to generate token!');
             });
+    }
+    function deleteReferal(id) {
+        console.log(id)
+        axios.get(`/invites/delete/${id}`)
+            .then(res => {
+                setInvite(invite.filter(inv => inv.id !== id));
+                toast.success('Invite deleted successfully!');
+            })
+    }
+    function deactivate(id) {
+        axios.post('/member/deactivate', { id })
+            .then(res => {
+                setMembers(members.filter(member => member.id !== id));
+                toast.success('Member deactivated successfully!');
+            }).catch(err => {
+
+            })
     }
     return (
         <section>
@@ -54,6 +73,7 @@ const Member = ({ member, invites }) => {
                                 <td className="px-2 py-1 font-semibold">Nama</td>
                                 <td className="px-2 py-1 font-semibold">Email</td>
                                 <td className="px-2 py-1 font-semibold">Is PJ</td>
+                                <td className="px-2 py-1 font-semibold">Action</td>
                             </tr>
                         </thead>
                         <tbody>
@@ -63,6 +83,11 @@ const Member = ({ member, invites }) => {
                                     <td className="px-2 border-b border-gray-200 py-1">{member.name}</td>
                                     <td className="px-2 border-b border-gray-200 py-1">{member.email}</td>
                                     <td className="px-2 border-b border-gray-200 py-1">{member.isPj ? "Yes" : "No"}</td>
+                                    <td className="px-2 border-b border-gray-200 py-1">
+                                        <button onClick={() => deactivate(member.id)} className="bg-red-400 rounded-md text-white">
+                                            <Minus />
+                                        </button>
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>
@@ -83,6 +108,7 @@ const Member = ({ member, invites }) => {
                                 <td className="px-2 py-1 font-semibold">Token</td>
                                 <td className="px-2 py-1 font-semibold">Role</td>
                                 <td className="px-2 py-1 font-semibold">Status</td>
+                                <td className="px-2 py-1 font-semibold">Aksi</td>
                             </tr>
                         </thead>
                         <tbody>
@@ -92,6 +118,11 @@ const Member = ({ member, invites }) => {
                                     <td className="px-2 border-b border-gray-200 py-1">{inv.token}</td>
                                     <td className="px-2 border-b border-gray-200 py-1">{inv.role}</td>
                                     <td className="px-2 border-b border-gray-200 py-1">{inv.status}</td>
+                                    <td className="px-2 border-b border-gray-200 py-1">
+                                        <button onClick={() => deleteReferal(inv.id)} className="bg-red-400 text-white p-1 rounded-md">
+                                            Hapus
+                                        </button>
+                                    </td>
                                 </tr>
                             ))}
                         </tbody>

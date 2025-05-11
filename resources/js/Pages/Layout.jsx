@@ -27,9 +27,6 @@ const Layout = ({ children }) => {
         },
     };
     useEffect(() => {
-        console.log(auth)
-    }, [auth])
-    useEffect(() => {
         if (isPortrait) {
             setCollapsedWidth(0);
         } else {
@@ -121,25 +118,23 @@ const Layout = ({ children }) => {
                                 Ormawa
                             </MenuItem>
                         )}
+                        <MenuItem
+                            id="event"
+                            icon={<Calendar1 />}
+                            active={url.startsWith('/event')}
+                            component={<Link href='/event' />}
+                        >
+                            Event
+                        </MenuItem>
                         {auth?.user?.role === 'ormawa' && (
-                            <>
-                                <MenuItem
-                                    id="event"
-                                    icon={<Calendar1 />}
-                                    active={url.startsWith('/event')}
-                                    component={<Link href='/event' />}
-                                >
-                                    Event
-                                </MenuItem>
-                                <MenuItem
-                                    id="member"
-                                    icon={<Users />}
-                                    active={url.startsWith('/member')}
-                                    component={<Link href='/member' />}
-                                >
-                                    Anggota
-                                </MenuItem>
-                            </>
+                            <MenuItem
+                                id="member"
+                                icon={<Users />}
+                                active={url.startsWith('/member')}
+                                component={<Link href='/member' />}
+                            >
+                                Anggota
+                            </MenuItem>
                         )}
                     </Menu>
                 </Sidebar>
@@ -167,6 +162,7 @@ const Layout = ({ children }) => {
                             <div
                                 className="flex gap-3 border items-center border-slate-400 px-3 py-1 rounded-md h-full"
                             >
+                                <img src={`/storage/${auth.user.ormawa.logo}`} className="rounded-full w-8" />
                                 <div className="justify-start text-left leading-tight">
                                     <p className="mb-0">{auth.user.ormawa.name}</p>
                                 </div>

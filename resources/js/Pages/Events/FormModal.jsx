@@ -25,13 +25,12 @@ const FormModal = ({ open, close, edit }) => {
             !data.registrationEnd ||
             !data.eventStart ||
             !data.eventEnd ||
-            !data.price
+            !data.price || !data.waGroup
         ) {
             toast.error("All fields are required.");
             return;
         }
         const path = edit ? "/event/update" : "/event/create";
-        console.log("do", path);
         router.post(path, data, {
             onSuccess: (res) => {
                 toast.success("Event created successfully");
@@ -122,6 +121,20 @@ const FormModal = ({ open, close, edit }) => {
                                 name="price"
                                 onChange={(e) =>
                                     changeData("price", e.target.value)
+                                }
+                                className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                        </div>
+                        <div className="flex flex-col text-left">
+                            <label htmlFor="waGroup" className="mb-1 font-medium">
+                                WA Group
+                            </label>
+                            <input
+                                type="text"
+                                id="waGroup"
+                                name="waGroup"
+                                onChange={(e) =>
+                                    changeData("waGroup", e.target.value)
                                 }
                                 className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
                             />
